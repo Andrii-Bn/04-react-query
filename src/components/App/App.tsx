@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import fetchMovies from "../../services/movieService";
 import ReactPaginate from "react-paginate";
@@ -7,7 +7,7 @@ import MovieModal from "../MovieModal/MovieModal";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import type { Movie } from "../../types/movie";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import css from "./App.module.css";
 
@@ -16,7 +16,7 @@ const App = () => {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isFetching, isError, isSuccess } = useQuery({
     queryKey: ["movies", searchValue, page],
     queryFn: ({ queryKey }) =>
       fetchMovies(queryKey[1] as string, queryKey[2] as number),
@@ -26,6 +26,12 @@ const App = () => {
 
   const movies = data?.results ?? [];
   const totalPages = data?.totalPages ?? 0;
+
+  useEffect(() => {
+    if (isSuccess && (data?.results?.length ?? 0) === 0) {
+      toast.error("No movies found for your request");
+    }
+  }, [isSuccess, data]);
 
   const openModal = (movie: Movie) => setSelectedMovie(movie);
   const closeModal = () => setSelectedMovie(null);
@@ -46,7 +52,7 @@ const App = () => {
       ) : (
         <>
           <MovieGrid movies={movies} onSelect={openModal} />
-
+          {isFetching && <Loader />}
           {totalPages > 1 && (
             <ReactPaginate
               pageCount={totalPages}

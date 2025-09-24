@@ -1,6 +1,5 @@
 import axios from "axios";
 import type { Movie } from "../types/movie";
-import toast from "react-hot-toast";
 
 interface ResponseParams {
   results: Movie[];
@@ -37,7 +36,6 @@ export default async function fetchMovies(
   try {
     const response = await axios.get<ResponseParams>(fetchUrl, fetchParams);
     if (response.data.results.length === 0) {
-      toast.error("No movies found for your request");
       return { results: [], totalPages: 0 };
     }
     console.log(response);
